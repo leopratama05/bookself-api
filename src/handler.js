@@ -12,9 +12,6 @@ const addBooks = (request, h) => {
     id, name, year, author, summary, publisher, pageCount, readPage, finished, reading, insertedAt, updatedAt
   };
 
-  Books.push(myBook);
-  const Success = Books.filter(b => b.id === id).length > 0;
-
   if (!name) { // if name doesn't exist
     const response = h.response({
       status: 'fail',
@@ -31,6 +28,8 @@ const addBooks = (request, h) => {
     response.code(400);
     return response
   };
+  Books.push(myBook);
+  const Success = Books.filter(b => b.id === id).length > 0;
   if (Success) {
     const response = h.response({
       status: 'success',
@@ -56,17 +55,18 @@ const getBooks = (request, h) => {
   const { name, reading, finished } = request.query;
 
   if (name !== undefined) {
-    const book = Books
-      .filter(filtering => filtering.name.toLowerCase().includes(name.toLowerCase()))
-      .map(book => ({
-        id: book.id,
-        name: book.name,
-        publisher: book.publisher
-      }))
     const response = h.response({
       status: 'success',
       data: {
-        book
+        books:
+          Books
+            .filter(filtering => filtering.name.toLowerCase().includes(name.toLowerCase()))
+            .map(book => ({
+              id: book.id,
+              name: book.name,
+              publisher: book.publisher
+            }))
+
       }
     })
     response.code(200);
@@ -202,6 +202,22 @@ const editBookById = (request, h) => {
   const updatedAt = new Date().toISOString();
   const index = Books.findIndex(book => book.id === bookId);
 
+  if (!name) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku'
+    })
+    response.code(400);
+    return response
+  };
+  if (readPage > pageCount) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount'
+    });
+    response.code(400);
+    return response
+  };
   if (index !== -1) {
     Books[index] = {
       ...Books[index],
@@ -221,22 +237,6 @@ const editBookById = (request, h) => {
       message: 'Buku berhasil diperbarui'
     });
     response.code(200);
-    return response
-  };
-  if (!name) {
-    const response = h.response({
-      status: 'fail',
-      message: 'Gagal memperbarui buku. Mohon isi nama buku'
-    })
-    response.code(400);
-    return response
-  };
-  if (readPage > pageCount) {
-    const response = h.response({
-      status: 'fail',
-      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount'
-    });
-    response.code(400);
     return response
   };
   const response = h.response({
